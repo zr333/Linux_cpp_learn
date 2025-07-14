@@ -1,55 +1,80 @@
 #include <iostream>
-#include <unistd.h>
-#include "threadpool.h"
+#include <atomic>
+#include <pthread.h>
+#include <chrono>
+#include <thread>
+#include "threadpool.h" 
 
-// 定义一个简单的任务类
-class Task
+// 全局计数器
+std::atomic<int> task_count{0};
+std::atomic<int> completed{0};
+
+pthread_mutex_t output_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// 测试任务类
+class TestTask
 {
 public:
-    Task(int id) : m_id(id) {}
-
     void process()
     {
-        std::cout << "Task " << m_id << " is being processed by thread " << pthread_self() << std::endl;
+        // 模拟任务处理(约1ms工作量)
+        volatile int dummy = 0;
+        for (int i = 0; i < 100000; ++i)
+        {
+            dummy += i;
+        }
 
-        delete this;
+        // 更新完成计数
+        completed++;
+
+        // 输出进度
+        pthread_mutex_lock(&output_mutex);
+        std::cout << "\rCompleted: " << completed << "/" << task_count << std::flush;
+        pthread_mutex_unlock(&output_mutex);
     }
-
-private:
-    int m_id;
 };
 
 int main()
 {
-    try
-    {
-        // 创建线程池，包含 4 个线程，最大请求数为 20
-        threadpool<Task> pool(8, 10000);
+    // 默认参数
+    int thread_num = 16;
+    int max_tasks = 10000;
+    
+    // 创建线程池
+    threadpool<TestTask> pool(thread_num, max_tasks);
 
-        // 创建并添加任务到线程池
-        for (int i = 0; i < 1000; ++i)
+    // 记录开始时间
+    auto start = std::chrono::steady_clock::now();
+
+    // 添加任务
+    for (int i = 0; i < max_tasks; ++i)
+    {
+        TestTask *task = new TestTask();
+        if (!pool.appendTask(task))
         {
-            Task *task = new Task(i);
-            if (pool.appendTask(task))
-            {
-                std::cout << "Task " << i << " added to the thread pool." << std::endl;
-            }
-            else
-            {
-                std::cout << "Failed to add Task " << i << " to the thread pool." << std::endl;
-                delete task;
-            }
+            delete task;
+            std::cerr << "Task queue full at " << i << " tasks" << std::endl;
+            break;
         }
-
-        // 主线程休眠一段时间，让线程池有时间处理任务
-        sleep(3);
-
-
+        task_count++;
     }
-    catch (const std::exception &e)
+
+    // 等待所有任务完成
+    while (completed < task_count)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    // 计算耗时
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    // 输出结果
+    std::cout << "\n\nResults:"
+              << "\nThreads: " << thread_num
+              << "\nTasks: " << task_count
+              << "\nTime: " << duration.count() << "ms"
+              << "\nThroughput: " << (task_count * 1000.0 / duration.count()) << " tasks/sec\n";
 
     return 0;
 }
