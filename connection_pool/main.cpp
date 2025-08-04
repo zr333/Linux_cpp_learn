@@ -58,9 +58,13 @@ void test1()
 void test2()
 {
 #if 0
-    // 非连接池，多线程，用时：10107791500 纳秒,10107 毫秒
+    // 非连接池，多线程，用时：110655335417 纳秒,110655 毫秒
     MysqlConn conn;
-    conn.connect("heheda", "123456", "test", "127.0.0.1", 3306);
+    if (!conn.connect("root", "123456789", "mydb_test", "localhost", 3306))
+    {
+        cout << "连接错误，检查你的账号密码" << endl;
+        exit(-1);
+    }
     steady_clock::time_point begin = steady_clock::now();
     thread t1(op1, 0, 1000);
     thread t2(op1, 1000, 2000);
