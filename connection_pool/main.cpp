@@ -105,7 +105,7 @@ void test2()
 int query()
 {
     MysqlConn conn;
-    //conn.connect("root", "123456789", "mydb_test", "localhost", 3306);
+    // conn.connect("root", "123456789", "mydb_test", "localhost", 3306);
     if (!conn.connect("root", "123456789", "mydb_test", "localhost", 3306))
     {
         cout << "连接错误，检查你的账号密码" << endl;
@@ -141,7 +141,6 @@ int main()
     conn.update("TRUNCATE TABLE person");
 
     test2();
-    
-    
+
     return 0;
 }

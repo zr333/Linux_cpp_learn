@@ -42,6 +42,8 @@ shared_ptr<MysqlConn> ConnPool::getConn()
     }
 
     /*
+    获取连接并在处理完后返回该连接到连接池队列
+
     当对应的线程把连接conn拿走之后，操作完了。数据库需要把这个连接还回来，如何实现？
     可以使用智能指针实现：由于当共享指针对象析构的时候，不需要把智能指针管理的连接（地址）析构，而是回收。因此可以手动去指定这个共享的智能指针它的删除器对应的处理动作。
     实现机理：
@@ -59,6 +61,7 @@ shared_ptr<MysqlConn> ConnPool::getConn()
                                       m_connQ.push(conn);                 // 回收数据库连接，此时它再次处于空闲状态
                                   });                                     // 智能指针
     m_connQ.pop();
+    
     m_cond.notify_one(); // 本意是唤醒生产者
     return connptr;
 }
