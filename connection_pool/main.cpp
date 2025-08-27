@@ -6,6 +6,7 @@
 using namespace std;
 // 1.单线程：使用/不适用连接池
 // 2.多线程：使用/不适用连接池
+// 测试数据：插入 5000 条数据（5 个线程，每个线程插入 1000 条）。
 
 void op1(int begin, int end)
 {
@@ -58,7 +59,7 @@ void test1()
 void test2()
 {
 #if 0
-    // 非连接池，多线程，用时：110655335417 纳秒,110655 毫秒
+    // 非连接池，单线程，用时：206616900885 纳秒,206616 毫秒
     MysqlConn conn;
     if (!conn.connect("root", "123456789", "mydb_test", "localhost", 3306))
     {
@@ -132,15 +133,19 @@ int query()
 
 int main()
 {
-    // SetConsoleOutputCP(CP_UTF8);
-    // query();
-    // test1();
+
     // 测试前，删除之前插入的脏数据
     MysqlConn conn;
     conn.connect("root", "123456789", "mydb_test", "localhost", 3306);
     conn.update("TRUNCATE TABLE person");
 
-    test2();
+    // SetConsoleOutputCP(CP_UTF8);
+    // query();
+    test1();
+    
+    
+
+    //test2();
 
     return 0;
 }

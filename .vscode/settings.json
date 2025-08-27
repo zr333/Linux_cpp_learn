@@ -55,6 +55,7 @@
         "condition_variable": "cpp",
         "fstream": "cpp",
         "mutex": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "list": "cpp"
     }
 }

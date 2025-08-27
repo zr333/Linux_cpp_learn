@@ -6,6 +6,7 @@ int main()
         short value;
         char bytes[sizeof(short)];
     } test;
+    
     test.value = 0x0102;
     if (test.bytes[0] == 1 && test.bytes[1] == 2)
         printf("big-endian\n");
