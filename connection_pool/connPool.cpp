@@ -58,7 +58,7 @@ shared_ptr<MysqlConn> ConnPool::getConn()
                                   {
                                       lock_guard<mutex> locker(m_mutexQ); // 自动管理加锁和解锁
                                       conn->refreshAliveTime();           // 更新连接的起始的空闲时间点
-                                      this->m_connQ.push(conn);                 // 回收数据库连接，此时它再次处于空闲状态
+                                      this->m_connQ.push(conn);           // 回收数据库连接，此时它再次处于空闲状态
                                   });                                     // 智能指针
     m_connQ.pop();
     

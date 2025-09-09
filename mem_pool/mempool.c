@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,13 +5,12 @@
 #include <fcntl.h>
 
 
-
 #define MP_ALIGNMENT 32
-#define MP_PAGE_SIZE 4096 // 内存块大小
+#define MP_PAGE_SIZE 4096 // 内存块大小 4kB
 #define MP_MAX_ALLOC_FROM_POOL (MP_PAGE_SIZE - 1)
 
 // 内存对齐
-// 将整数 n 向上对齐到 alignment 的倍数。
+// 将整数 n 向上对齐到 alignment 的倍数。例如 mp_align(24, 32) 结果为 32，mp_align(17, 32) 结果也为 32
 #define mp_align(n, alignment) (((n) + (alignment - 1)) & ~(alignment - 1))
 // 将指针 p 向上对齐到 alignment 的边界，返回值类型是 void *
 #define mp_align_ptr(p, alignment) (void *)((((size_t)p) + (alignment - 1)) & ~(alignment - 1))
@@ -27,7 +25,6 @@ struct mp_large_s
 // 小内存块的状态
 struct mp_node_s
 {
-
     unsigned char *last; // 当前未分配区域的起始位置
     unsigned char *end;  // 当前内存块的结束位置
     struct mp_node_s *next; // 下一内存块
@@ -48,9 +45,8 @@ struct mp_pool_s
 
 struct mp_pool_s *mp_create_pool(size_t size);
 void mp_destory_pool(struct mp_pool_s *pool);
-void *mp_alloc(struct mp_pool_s *pool, size_t size);
-void *mp_nalloc(struct mp_pool_s *pool, size_t size);
-void *mp_calloc(struct mp_pool_s *pool, size_t size);
+void *mp_alloc(struct mp_pool_s *pool, size_t size);  // 分配内存
+void *mp_calloc(struct mp_pool_s *pool, size_t size); // 分配内存，并初始化为 0
 void mp_free(struct mp_pool_s *pool, void *p);
 
 // 创建内存池
@@ -129,6 +125,7 @@ void mp_reset_pool(struct mp_pool_s *pool)
 
     // 遍历 pool->head 链表（存储小块内存节点）。
     // 将每个节点的 last 指针重置为该节点的起始地址加上 mp_node_s 结构体的大小，表示该节点可重新用于分配小块内存。 
+    // 表示该节点可用
     for (h = pool->head; h; h = h->next)
     {
         h->last = (unsigned char *)h + sizeof(struct mp_node_s);
@@ -216,31 +213,6 @@ static void *mp_alloc_large(struct mp_pool_s *pool, size_t size)
 
     return p;
 }
-// 直接分配大块内存，支持指定的对齐格式
-void *mp_memalign(struct mp_pool_s *pool, size_t size, size_t alignment)
-{
-
-    void *p;
-
-    int ret = posix_memalign(&p, alignment, size);
-    if (ret)
-    {
-        return NULL;
-    }
-
-    // 将新分配的大内存插入到内存池的大内存链表头部
-    struct mp_large_s *large = mp_alloc(pool, sizeof(struct mp_large_s));
-    if (large == NULL)
-    {
-        free(p);
-        return NULL;
-    }
-    large->alloc = p;
-    large->next = pool->large;
-    pool->large = large;
-
-    return p;
-}
 
 
 // 分配大小为size的内存（对齐）
@@ -250,7 +222,7 @@ void *mp_alloc(struct mp_pool_s *pool, size_t size)
     unsigned char *m;
     struct mp_node_s *p;
 
-    // 如果请求分配的内存大小小于等于内存池的最大块大小（max），则从内存池中分配内存。
+    // 如果请求分配的内存大小 <= 内存池的最大块大小（max），则从内存池中分配内存。
     if (size <= pool->max)
     {
 
@@ -273,33 +245,8 @@ void *mp_alloc(struct mp_pool_s *pool, size_t size)
     // 如果请求分配的内存大小大于内存池的最大块大小，则直接调用 mp_alloc_large 分配大块内存。
     return mp_alloc_large(pool, size);
 }
-// 分配大小为size的内存（非对齐）
-void *mp_nalloc(struct mp_pool_s *pool, size_t size)
-{
 
-    unsigned char *m;
-    struct mp_node_s *p;
 
-    if (size <= pool->max)
-    {
-        p = pool->current;
-
-        do
-        {
-            m = p->last;
-            if ((size_t)(p->end - m) >= size)
-            {
-                p->last = m + size;
-                return m;
-            }
-            p = p->next;
-        } while (p);
-
-        return mp_alloc_block(pool, size);
-    }
-
-    return mp_alloc_large(pool, size);
-}
 // 分配大小为size的内存并初始化为0
 void *mp_calloc(struct mp_pool_s *pool, size_t size)
 {
@@ -309,6 +256,32 @@ void *mp_calloc(struct mp_pool_s *pool, size_t size)
     {
         memset(p, 0, size);
     }
+
+    return p;
+}
+
+// 直接分配大块内存，支持指定的对齐格式， 不使用内存池
+void *mp_memalign(struct mp_pool_s *pool, size_t size, size_t alignment)
+{
+
+    void *p;
+
+    int ret = posix_memalign(&p, alignment, size);
+    if (ret)
+    {
+        return NULL;
+    }
+
+    // 将新分配的大内存插入到内存池的大内存链表头部
+    struct mp_large_s *large = mp_alloc(pool, sizeof(struct mp_large_s));
+    if (large == NULL)
+    {
+        free(p);
+        return NULL;
+    }
+    large->alloc = p;
+    large->next = pool->large;
+    pool->large = large;
 
     return p;
 }
@@ -377,6 +350,7 @@ int main()
             if (pp[j])
             {
                 printf("calloc wrong\n");
+                break; // 发现错误立即退出
             }
             printf("calloc success\n");
         }

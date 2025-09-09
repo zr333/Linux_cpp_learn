@@ -12,7 +12,7 @@ int main() {
     int fd2 = open("2.txt", O_RDWR);
 
 
-    int len = lseek(fd1, 0, SEEK_END);
+    //int len = lseek(fd1, 0, SEEK_END); // 返回的是 文件开头到文件末尾的字节数，也就是 文件大小。
     struct stat st;
     fstat(fd1, &st);
     int len = st.st_size;

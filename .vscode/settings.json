@@ -57,6 +57,7 @@
         "mutex": "cpp",
         "map": "cpp",
         "list": "cpp",
-        "types.h": "c"
+        "types.h": "c",
+        "mem_pool.h": "c"
     }
 }

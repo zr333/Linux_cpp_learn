@@ -55,7 +55,7 @@ void ThreadPool::run() {
 
         pthread_mutex_lock(&m_tasks_mutex);
 
-        // 等到：有任务可取 或 收到停止信号
+        // 有任务可取 或 收到停止信号
         while (!m_stop && m_tasks.empty()) {
             pthread_cond_wait(&m_tasks_cond, &m_tasks_mutex); // 处理虚假唤醒
         }
