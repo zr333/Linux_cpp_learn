@@ -1,0 +1,9 @@
+BasedOnStyle: Google
+IndentWidth: 4                  # 每次缩进的空格数，默认为 2
+AlignAfterOpenBracket: Align    # 保持模板参数与 `class` 之间没有空格
+AlignArrayOfStructures: None    # 对结构体数组成员不对齐
+AccessModifierOffset: -4        # 访问修饰符（如 private、public）会向左缩进4个空格
+IndentCaseLabels: true          # case 语句的缩进
+UseTab: Never                   # 始终使用空格，而不是制表符
+ColumnLimit: 120     
+

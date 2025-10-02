@@ -58,6 +58,16 @@
         "map": "cpp",
         "list": "cpp",
         "types.h": "c",
-        "mem_pool.h": "c"
-    }
+        "mem_pool.h": "c",
+        "threadpool.h": "c",
+        "cerrno": "cpp"
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "seaube.clangformat"
+    },
+    "[c]": {
+        "editor.defaultFormatter": "seaube.clangformat"
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true
 }
