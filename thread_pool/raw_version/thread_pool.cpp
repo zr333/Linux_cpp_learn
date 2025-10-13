@@ -1,7 +1,7 @@
-#include "threadPool.h"
-#include <stdio.h>
+#include "thread_pool.h"
+#include <stdexcept>
 
-ThreadPool::ThreadPool(int numThreads) : m_num_threads(numThreads), m_max_tasks(65535), m_stop(false) {
+threadPool::threadPool(int numThreads) : m_num_threads(numThreads), m_stop(false) {
     
     //初始化
     pthread_mutex_init(&m_tasks_mutex, NULL);
@@ -16,7 +16,7 @@ ThreadPool::ThreadPool(int numThreads) : m_num_threads(numThreads), m_max_tasks(
     }
 }
 
-ThreadPool::~ThreadPool() {
+threadPool::~threadPool() {
     m_stop = true; 
 
     pthread_cond_broadcast(&m_tasks_cond);
@@ -28,12 +28,11 @@ ThreadPool::~ThreadPool() {
     
 }
 
-bool ThreadPool::addTask(task f){
+bool threadPool::addTask(task f){
     pthread_mutex_lock(&m_tasks_mutex);
-    if(m_tasks.size() >= m_max_tasks) {
+    if (m_stop) {
         pthread_mutex_unlock(&m_tasks_mutex);
-        printf("task queue is full\n");
-        return false;
+        throw std::runtime_error("threadPool stopped");  // 线程池已停止,不能入队
     }
     m_tasks.emplace(f);
     pthread_mutex_unlock(&m_tasks_mutex);
@@ -42,14 +41,14 @@ bool ThreadPool::addTask(task f){
     return true;
 }
 
-void* ThreadPool::worker(void* arg) {
-    ThreadPool* pool = (ThreadPool*)arg;
+void* threadPool::worker(void* arg) {
+    threadPool* pool = (threadPool*)arg;
     pool->run();
     return pool;
 }
 
 // 假设：task = std::function<void()> 或可移动可调用对象
-void ThreadPool::run() {
+void threadPool::run() {
     while(1) {
         task job; 
 
