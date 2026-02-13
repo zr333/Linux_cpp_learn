@@ -1,12 +1,14 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+
+
+void func3() {
+    // 创建更容易触发段错误的情况
+    int *null_ptr = NULL;
+    *null_ptr = 10;  // 访问空指针，几乎肯定会触发段错误
+}
 
 int main() {
-    char *p = NULL;            // 野指针
-    *p = "hello world";
-
-    //int arr[5];
-    //arr[10] = 20;  // 越界写入 → 访问非法内存
-
+    func3();  // 调用这个函数来触发段错误
     return 0;
 }

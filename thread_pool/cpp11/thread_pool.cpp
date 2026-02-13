@@ -36,8 +36,8 @@ void threadPool::worker() {
             谓词版（简洁版）：
             相当于做了这几步：
             检查谓词：
-            如果 predicate()返回 true（这里是 m_stop == true 或 m_tasks 非空），wait立即返回，不会睡眠。
-            如果 predicate() 返回 false，则自动释放 lock，把线程挂起，直到被 notify_one() 或 notify_all()
+            如果 lambda表达式 返回 true（这里是 m_stop == true 或 m_tasks 非空），wait立即返回，不会睡眠。
+            如果 lambda表达式 返回 false，则自动释放 lock，把线程挂起，直到被 notify_one() 或 notify_all()
             唤醒，再次尝试。 被唤醒后： 线程重新拿到 lock，再次调用 predicate()。 如果 predicate() 依旧为
             false，继续挂起（避免虚假唤醒）。 如果 predicate() 为 true，返回并继续执行下面的代码
             */

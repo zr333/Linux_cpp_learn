@@ -14,7 +14,7 @@ typedef void (*free_t)(void *ptr);
 malloc_t malloc_f = NULL;
 free_t free_f = NULL;
 
-int enable_malloc_hook = 1;
+int enable_malloc_hook = 1; // 标记是否使用hook
 int enable_free_hook = 1;
 
 void *ConvertToELF(void *addr)
